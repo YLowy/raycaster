@@ -13,4 +13,5 @@ public:
 private:
     uint32_t floatframert_buffer[256];
     uint32_t fixedframert_buffer[256];
+    int buffer_count = 0;
 };
