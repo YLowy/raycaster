@@ -9,6 +9,9 @@
 #include "raycaster_float.h"
 #include "renderer.h"
 
+#include "bench.c"
+#include "bench.h"
+
 using namespace std;
 
 static void DrawBuffer(SDL_Renderer *sdlRenderer,
@@ -79,6 +82,7 @@ int main(int argc, char *args[])
                    SDL_GetError());
         } else {
             Game game;
+            double t1 = 0.0, t2 = 0.0, t3 = 0.0;
             RayCasterFloat floatCaster;
             Renderer floatRenderer(&floatCaster);
             uint32_t floatBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
@@ -102,9 +106,11 @@ int main(int argc, char *args[])
                 SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 
             while (!isExiting) {
+                t1 = tvgetf();
                 floatRenderer.TraceFrame(&game, floatBuffer);
+                t2 = tvgetf();
                 fixedRenderer.TraceFrame(&game, fixedBuffer);
-
+                t3 = tvgetf();
                 DrawBuffer(sdlRenderer, fixedTexture, fixedBuffer, 0);
                 DrawBuffer(sdlRenderer, floatTexture, floatBuffer,
                            SCREEN_WIDTH + 1);
@@ -120,6 +126,9 @@ int main(int argc, char *args[])
                                      static_cast<float>(tickFrequency);
                 tickCounter = nextCounter;
                 game.Move(moveDirection, rotateDirection, seconds);
+                system("clear");
+                printf("floatRenderer: %f  fixedRenderer: %f \n", t2 - t1,
+                       t3 - t2);
             }
             SDL_DestroyTexture(floatTexture);
             SDL_DestroyTexture(fixedTexture);
