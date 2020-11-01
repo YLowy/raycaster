@@ -36,6 +36,28 @@ static void DrawBuffer(SDL_Renderer *sdlRenderer,
     SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &r);
 }
 
+static void DrawFrameBuffer(SDL_Renderer *sdlRenderer,
+                            SDL_Texture *sdlTexture,
+                            uint32_t *fb,
+                            int dx)
+{
+    int pitch = 0;
+    void *pixelsPtr;
+    if (SDL_LockTexture(sdlTexture, NULL, &pixelsPtr, &pitch)) {
+        throw runtime_error("Unable to lock texture");
+    }
+    memcpy(
+        pixelsPtr, fb,
+        FRAME_RATE_SCREEN_WIDTH * FRAME_RATE_SCREEN_HEIGHT * sizeof(uint32_t));
+    SDL_UnlockTexture(sdlTexture);
+    SDL_Rect r;
+    r.x = dx * SCREEN_SCALE;
+    r.y = 0;
+    r.w = FRAME_RATE_SCREEN_WIDTH * SCREEN_SCALE;
+    r.h = FRAME_RATE_SCREEN_HEIGHT * SCREEN_SCALE;
+    SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &r);
+}
+
 static bool ProcessEvent(const SDL_Event &event,
                          int *moveDirection,
                          int *rotateDirection)
@@ -82,12 +104,12 @@ int main(int argc, char *args[])
         SDL_Window *sdlframertWindow = SDL_CreateWindow(
             "frame rate [fixed-point vs. floating-point]",
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            SCREEN_SCALE * (FRAME_RATE_SCREEN_WIDTH * 2 + 1),
+            SCREEN_SCALE * (FRAME_RATE_SCREEN_WIDTH),
             SCREEN_SCALE * FRAME_RATE_SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
         //---
 
-        if (sdlWindow == NULL) {
+        if (sdlWindow == NULL || sdlframertWindow == NULL) {
             printf("Window could not be created! SDL_Error: %s\n",
                    SDL_GetError());
         } else {
@@ -121,12 +143,20 @@ int main(int argc, char *args[])
             SDL_Renderer *sdlframeRender = SDL_CreateRenderer(
                 sdlframertWindow, -1, SDL_RENDERER_ACCELERATED);
             //---
+
+
             SDL_Texture *fixedTexture = SDL_CreateTexture(
                 sdlRenderer, SDL_PIXELFORMAT_ARGB8888,
                 SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
             SDL_Texture *floatTexture = SDL_CreateTexture(
                 sdlRenderer, SDL_PIXELFORMAT_ARGB8888,
                 SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+            //------
+            SDL_Texture *framerateTexture = SDL_CreateTexture(
+                sdlframeRender, SDL_PIXELFORMAT_ARGB8888,
+                SDL_TEXTUREACCESS_STREAMING, FRAME_RATE_SCREEN_WIDTH,
+                FRAME_RATE_SCREEN_HEIGHT);
+            //------
 
             while (!isExiting) {
                 t1 = tvgetf();
@@ -138,9 +168,14 @@ int main(int argc, char *args[])
                 DrawBuffer(sdlRenderer, floatTexture, floatBuffer,
                            SCREEN_WIDTH + 1);
                 //---
-                framert.Trace(t2 - t1, t3 - t2);
+
+
+                framert.Trace(t2 - t1, t3 - t2, framerateBuffer);
+                DrawFrameBuffer(sdlframeRender, framerateTexture,
+                                framerateBuffer, 0);
                 //---
                 SDL_RenderPresent(sdlRenderer);
+                SDL_RenderPresent(sdlframeRender);
 
                 if (SDL_PollEvent(&event)) {
                     isExiting =
@@ -151,14 +186,14 @@ int main(int argc, char *args[])
                                      static_cast<float>(tickFrequency);
                 tickCounter = nextCounter;
                 game.Move(moveDirection, rotateDirection, seconds);
-                // system("clear");
-                // printf("floatRenderer: %f  fixedRenderer: %f \n", t2 - t1,
-                //       t3 - t2);
             }
             SDL_DestroyTexture(floatTexture);
             SDL_DestroyTexture(fixedTexture);
+            SDL_DestroyTexture(framerateTexture);
             SDL_DestroyRenderer(sdlRenderer);
+            SDL_DestroyRenderer(sdlframeRender);
             SDL_DestroyWindow(sdlWindow);
+            SDL_DestroyWindow(sdlframertWindow);
         }
     }
 
