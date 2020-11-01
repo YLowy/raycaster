@@ -12,6 +12,8 @@
 #include "bench.c"
 #include "bench.h"
 
+#include "framerate.h"
+
 using namespace std;
 
 static void DrawBuffer(SDL_Renderer *sdlRenderer,
@@ -76,6 +78,14 @@ int main(int argc, char *args[])
                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                              SCREEN_SCALE * (SCREEN_WIDTH * 2 + 1),
                              SCREEN_SCALE * SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+        //---
+        SDL_Window *sdlframertWindow = SDL_CreateWindow(
+            "frame rate [fixed-point vs. floating-point]",
+            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+            SCREEN_SCALE * (FRAME_RATE_SCREEN_WIDTH * 2 + 1),
+            SCREEN_SCALE * FRAME_RATE_SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+
+        //---
 
         if (sdlWindow == NULL) {
             printf("Window could not be created! SDL_Error: %s\n",
@@ -89,6 +99,15 @@ int main(int argc, char *args[])
             RayCasterFixed fixedCaster;
             Renderer fixedRenderer(&fixedCaster);
             uint32_t fixedBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+            //===
+            Framerate framert;
+            framert.Init();
+            uint32_t framerateBuffer[FRAME_RATE_SCREEN_WIDTH *
+                                     FRAME_RATE_SCREEN_HEIGHT];
+            //===
+
+
+
             int moveDirection = 0;
             int rotateDirection = 0;
             bool isExiting = false;
@@ -98,6 +117,10 @@ int main(int argc, char *args[])
 
             SDL_Renderer *sdlRenderer =
                 SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
+            //---
+            SDL_Renderer *sdlframeRender = SDL_CreateRenderer(
+                sdlframertWindow, -1, SDL_RENDERER_ACCELERATED);
+            //---
             SDL_Texture *fixedTexture = SDL_CreateTexture(
                 sdlRenderer, SDL_PIXELFORMAT_ARGB8888,
                 SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -114,7 +137,9 @@ int main(int argc, char *args[])
                 DrawBuffer(sdlRenderer, fixedTexture, fixedBuffer, 0);
                 DrawBuffer(sdlRenderer, floatTexture, floatBuffer,
                            SCREEN_WIDTH + 1);
-
+                //---
+                framert.Trace(t2 - t1, t3 - t2);
+                //---
                 SDL_RenderPresent(sdlRenderer);
 
                 if (SDL_PollEvent(&event)) {
@@ -126,9 +151,9 @@ int main(int argc, char *args[])
                                      static_cast<float>(tickFrequency);
                 tickCounter = nextCounter;
                 game.Move(moveDirection, rotateDirection, seconds);
-                system("clear");
-                printf("floatRenderer: %f  fixedRenderer: %f \n", t2 - t1,
-                       t3 - t2);
+                // system("clear");
+                // printf("floatRenderer: %f  fixedRenderer: %f \n", t2 - t1,
+                //       t3 - t2);
             }
             SDL_DestroyTexture(floatTexture);
             SDL_DestroyTexture(fixedTexture);

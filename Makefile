@@ -23,12 +23,13 @@ all: $(GIT_HOOKS) $(BIN)
 $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
-	
+
 OBJS := \
 	game.o \
 	raycaster_fixed.o \
 	raycaster_float.o \
 	renderer.o \
+	framerate.o \
 	main.o
 deps := $(OBJS:%.o=.%.o.d)
 
