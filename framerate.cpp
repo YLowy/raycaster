@@ -22,9 +22,7 @@ void Framerate::Trace(double floatflametime,
     }
     uint8_t floatpoint = (uint8_t)(floatflametime * 100000);
     uint8_t fixedpoint = (uint8_t)(fixedflametime * 100000);
-    static int counter = 0;
-    // printf("Trace : t1 : %d, t2 : %d   :%d \n", floatpoint,
-    // fixedpoint,counter++);
+
 
     floatframert_buffer[buffer_count] = floatpoint;
     fixedframert_buffer[buffer_count] = fixedpoint;
@@ -34,10 +32,16 @@ void Framerate::Trace(double floatflametime,
         buffer_count++;
 
     for (int i = 0; i < 60; i++) {
-        int tmp = (int) buffer_count - i;
-        if (tmp < 0)
-            tmp += 255;
-
+        int tmp;
+        if (buffer_count >= i) {
+            tmp = buffer_count - i;
+        } else {
+            tmp = buffer_count - i + 256;
+        }
+        if (floatframert_buffer[tmp] > 79)
+            floatframert_buffer[tmp] = 79;
+        if (fixedframert_buffer[tmp] >= 79)
+            fixedframert_buffer[tmp] = 79;
         fb[160 * (80 - floatframert_buffer[tmp]) + ((60 - i) << 1)] = 0;
         fb[160 * (160 - fixedframert_buffer[tmp]) + ((60 - i) << 1)] = 0;
     }
