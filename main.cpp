@@ -12,6 +12,8 @@
 #include "bench.c"
 #include "bench.h"
 
+#include "precal_table.h"
+
 #include "framerate.h"
 
 using namespace std;
@@ -92,6 +94,10 @@ static bool ProcessEvent(const SDL_Event &event,
 }
 int main(int argc, char *args[])
 {
+    //--- precal Table
+    Precal_table pctable;
+    pctable.Precal_table_Init();
+    //---
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
     } else {

@@ -30,6 +30,7 @@ OBJS := \
 	raycaster_float.o \
 	renderer.o \
 	framerate.o \
+	precal_table.o\
 	main.o
 deps := $(OBJS:%.o=.%.o.d)
 
