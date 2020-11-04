@@ -1,10 +1,11 @@
 // fixed-point implementation
-
 #include "raycaster_fixed.h"
+#include "precal_table.h"
 #include "raycaster_data.h"
 #include "raycaster_tables.h"
-
 // (v * f) >> 8
+
+extern Precal_table pctable;
 uint16_t RayCasterFixed::MulU(uint8_t v, uint16_t f)
 {
     const uint8_t f_h = f >> 8;
@@ -97,7 +98,6 @@ void RayCasterFixed::CalculateDistance(uint16_t rayX,
     int8_t tileStepY;
     int16_t interceptX = rayX;
     int16_t interceptY = rayY;
-
     const uint8_t quarter = rayA >> 8;
     const uint8_t angle = rayA % 256;
     const uint8_t offsetX = rayX % 256;
@@ -244,6 +244,7 @@ void RayCasterFixed::Trace(uint16_t screenX,
 
     // distance = deltaY * cos(playerA) + deltaX * sin(playerA)
     int16_t distance = 0;
+
     if (_playerA == 0) {
         distance += deltaY;
     } else if (_playerA == 512) {
@@ -251,16 +252,18 @@ void RayCasterFixed::Trace(uint16_t screenX,
     } else
         switch (_viewQuarter) {
         case 0:
-            distance += MulS(LOOKUP8(g_cos, _viewAngle), deltaY);
+            distance += MulS(LOOKUP8(pctable.g_cos, _viewAngle), deltaY);
             break;
         case 1:
-            distance -= MulS(LOOKUP8(g_cos, INVERT(_viewAngle)), deltaY);
+            distance -=
+                MulS(LOOKUP8(pctable.g_cos, INVERT(_viewAngle)), deltaY);
             break;
         case 2:
-            distance -= MulS(LOOKUP8(g_cos, _viewAngle), deltaY);
+            distance -= MulS(LOOKUP8(pctable.g_cos, _viewAngle), deltaY);
             break;
         case 3:
-            distance += MulS(LOOKUP8(g_cos, INVERT(_viewAngle)), deltaY);
+            distance +=
+                MulS(LOOKUP8(pctable.g_cos, INVERT(_viewAngle)), deltaY);
             break;
         }
 
@@ -271,16 +274,18 @@ void RayCasterFixed::Trace(uint16_t screenX,
     } else
         switch (_viewQuarter) {
         case 0:
-            distance += MulS(LOOKUP8(g_sin, _viewAngle), deltaX);
+            distance += MulS(LOOKUP8(pctable.g_sin, _viewAngle), deltaX);
             break;
         case 1:
-            distance += MulS(LOOKUP8(g_sin, INVERT(_viewAngle)), deltaX);
+            distance +=
+                MulS(LOOKUP8(pctable.g_sin, INVERT(_viewAngle)), deltaX);
             break;
         case 2:
-            distance -= MulS(LOOKUP8(g_sin, _viewAngle), deltaX);
+            distance -= MulS(LOOKUP8(pctable.g_sin, _viewAngle), deltaX);
             break;
         case 3:
-            distance -= MulS(LOOKUP8(g_sin, INVERT(_viewAngle)), deltaX);
+            distance -=
+                MulS(LOOKUP8(pctable.g_sin, INVERT(_viewAngle)), deltaX);
             break;
         }
     if (distance >= MIN_DIST) {

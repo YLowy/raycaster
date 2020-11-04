@@ -92,10 +92,11 @@ static bool ProcessEvent(const SDL_Event &event,
     }
     return false;
 }
+
+Precal_table pctable;
 int main(int argc, char *args[])
 {
     //--- precal Table
-    Precal_table pctable;
     pctable.Precal_table_Init();
     //---
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {

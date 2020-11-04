@@ -20,7 +20,7 @@ public:
     uint16_t g_overflowStep[256];
     uint16_t g_deltaAngle[SCREEN_WIDTH];
 
-    static void Precal_table_Init();
+    void Precal_table_Init();
 
     Precal_table();
     ~Precal_table();
