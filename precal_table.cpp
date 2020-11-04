@@ -6,7 +6,6 @@
 void Precal_table::Precal_table_Init()
 {
     printf("--Precal Init---\n");
-    printf("--Precal Init gsin() gcos()---\n");
 
     for (int i = 0; i < 256; i++) {
         g_sin[i] = static_cast<uint8_t>(256.0f * sin(i / 1024.0f * 2 * M_PI));

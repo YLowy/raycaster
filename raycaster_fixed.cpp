@@ -2,7 +2,6 @@
 #include "raycaster_fixed.h"
 #include "precal_table.h"
 #include "raycaster_data.h"
-#include "raycaster_tables.h"
 // (v * f) >> 8
 
 extern Precal_table pctable;
@@ -75,14 +74,14 @@ void RayCasterFixed::LookupHeight(uint16_t distance,
     if (distance >= 256) {
         const uint16_t ds = distance >> 3;
         if (ds >= 256) {
-            *height = LOOKUP8(g_farHeight, 255) - 1;
-            *step = LOOKUP16(g_farStep, 255);
+            *height = LOOKUP8(pctable.g_farHeight, 255) - 1;
+            *step = LOOKUP16(pctable.g_farStep, 255);
         }
-        *height = LOOKUP8(g_farHeight, ds);
-        *step = LOOKUP16(g_farStep, ds);
+        *height = LOOKUP8(pctable.g_farHeight, ds);
+        *step = LOOKUP16(pctable.g_farStep, ds);
     } else {
-        *height = LOOKUP8(g_nearHeight, distance);
-        *step = LOOKUP16(g_nearStep, distance);
+        *height = LOOKUP8(pctable.g_nearHeight, distance);
+        *step = LOOKUP16(pctable.g_nearStep, distance);
     }
 }
 
@@ -145,15 +144,17 @@ void RayCasterFixed::CalculateDistance(uint16_t rayX,
         case 0:
         case 1:
             tileStepX = 1;
-            interceptY += MulTan(offsetX, true, quarter, angle, g_cotan);
+            interceptY +=
+                MulTan(offsetX, true, quarter, angle, pctable.g_cotan);
             interceptX -= 256;
-            stepX = AbsTan(quarter, angle, g_tan);
+            stepX = AbsTan(quarter, angle, pctable.g_tan);
             break;
         case 2:
         case 3:
             tileStepX = -1;
-            interceptY -= MulTan(offsetX, false, quarter, angle, g_cotan);
-            stepX = -AbsTan(quarter, angle, g_tan);
+            interceptY -=
+                MulTan(offsetX, false, quarter, angle, pctable.g_cotan);
+            stepX = -AbsTan(quarter, angle, pctable.g_tan);
             break;
         }
 
@@ -161,15 +162,15 @@ void RayCasterFixed::CalculateDistance(uint16_t rayX,
         case 0:
         case 3:
             tileStepY = 1;
-            interceptX += MulTan(offsetY, true, quarter, angle, g_tan);
+            interceptX += MulTan(offsetY, true, quarter, angle, pctable.g_tan);
             interceptY -= 256;
-            stepY = AbsTan(quarter, angle, g_cotan);
+            stepY = AbsTan(quarter, angle, pctable.g_cotan);
             break;
         case 1:
         case 2:
             tileStepY = -1;
-            interceptX -= MulTan(offsetY, false, quarter, angle, g_tan);
-            stepY = -AbsTan(quarter, angle, g_cotan);
+            interceptX -= MulTan(offsetY, false, quarter, angle, pctable.g_tan);
+            stepY = -AbsTan(quarter, angle, pctable.g_cotan);
             break;
         }
 
@@ -221,8 +222,8 @@ void RayCasterFixed::Trace(uint16_t screenX,
                            uint16_t *textureY,
                            uint16_t *textureStep)
 {
-    uint16_t rayAngle =
-        static_cast<uint16_t>(_playerA + LOOKUP16(g_deltaAngle, screenX));
+    uint16_t rayAngle = static_cast<uint16_t>(
+        _playerA + LOOKUP16(pctable.g_deltaAngle, screenX));
 
     // neutralize artefacts around edges
     switch (rayAngle % 256) {
@@ -293,8 +294,8 @@ void RayCasterFixed::Trace(uint16_t screenX,
         LookupHeight((distance - MIN_DIST) >> 2, screenY, textureStep);
     } else {
         *screenY = SCREEN_HEIGHT >> 1;
-        *textureY = LOOKUP16(g_overflowOffset, distance);
-        *textureStep = LOOKUP16(g_overflowStep, distance);
+        *textureY = LOOKUP16(pctable.g_overflowOffset, distance);
+        *textureStep = LOOKUP16(pctable.g_overflowStep, distance);
     }
 }
 
